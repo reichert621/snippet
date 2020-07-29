@@ -1,0 +1,55 @@
+{
+  "name": "@papercups-io/snippet",
+  "version": "1.0.3",
+  "description": "Papercups chat snippet",
+  "author": "reichert621",
+  "license": "MIT",
+  "repository": "papercups-io/snippet",
+  "main": "dist/index.js",
+  "module": "dist/index.modern.js",
+  "source": "src/index.tsx",
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "sync:components": "cp -R ../chat-widget/src/components src/components",
+    "sync:api": "cp -R ../chat-widget/src/api.ts src/api.ts",
+    "sync:config": "cp -R ../chat-widget/src/config.ts src/config.ts",
+    "sync:theme": "cp -R ../chat-widget/src/theme.ts src/theme.ts",
+    "sync:utils": "cp -R ../chat-widget/src/utils.ts src/utils.ts",
+    "sync": "npm run sync:components && npm run sync:api && npm run sync:config && npm run sync:theme && npm run sync:utils",
+    "deploy": "cp dist/index.js ../opus/assets/public/widget.js",
+    "build": "parcel build src/index.tsx --out-file dist/index.js --no-source-maps",
+    "start": "parcel watch src/index.tsx --out-file dist/index.js"
+  },
+  "peerDependencies": {
+    "react": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^25.1.4",
+    "@types/node": "^12.12.38",
+    "@types/phoenix": "^1.4.4",
+    "@types/react": "^16.9.27",
+    "@types/react-dom": "^16.9.7",
+    "@types/superagent": "^4.1.8",
+    "@types/theme-ui": "^0.3.5",
+    "@types/tinycolor2": "^1.4.2",
+    "parcel-bundler": "^1.12.4",
+    "prettier": "^2.0.4",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "typescript": "^3.7.5"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "dayjs": "^1.8.29",
+    "framer-motion": "^2.0.1",
+    "phoenix": "^1.5.3",
+    "react": "^16.0.0",
+    "superagent": "^5.3.1",
+    "theme-ui": "^0.3.1",
+    "tinycolor2": "^1.4.1"
+  }
+}
