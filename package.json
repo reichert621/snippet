@@ -12,7 +12,7 @@
     "node": ">=10"
   },
   "scripts": {
-    "sync:components": "cp -R ../chat-widget/src/components src/components",
+    "sync:components": "cp -R ../chat-widget/src/components/* src/components",
     "sync:api": "cp ../chat-widget/src/api.ts src/api.ts",
     "sync:config": "cp ../chat-widget/src/config.ts src/config.ts",
     "sync:theme": "cp ../chat-widget/src/theme.ts src/theme.ts",
