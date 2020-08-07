@@ -13,11 +13,12 @@
   },
   "scripts": {
     "sync:components": "cp -R ../widget/src/components/* src/components",
+    "sync:track": "cp -R ../widget/src/track/* src/track",
     "sync:api": "cp ../widget/src/api.ts src/api.ts",
     "sync:config": "cp ../widget/src/config.ts src/config.ts",
     "sync:theme": "cp ../widget/src/theme.ts src/theme.ts",
     "sync:utils": "cp ../widget/src/utils.ts src/utils.ts",
-    "sync": "npm run sync:components && npm run sync:api && npm run sync:config && npm run sync:theme && npm run sync:utils",
+    "sync": "npm run sync:components && npm run sync:track && npm run sync:api && npm run sync:config && npm run sync:theme && npm run sync:utils",
     "deploy": "cp dist/index.js ../opus/assets/public/widget-v2.js",
     "build": "parcel build src/index.tsx --out-file dist/index.js --no-source-maps",
     "start": "parcel watch src/index.tsx --out-file dist/index.js"
