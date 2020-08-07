@@ -8,6 +8,7 @@ const {
   accountId,
   title,
   subtitle,
+  newMessagePlaceholder,
   primaryColor,
   greeting,
   customer,
@@ -29,6 +30,7 @@ ReactDOM.render(
     accountId={accountId}
     title={title}
     subtitle={subtitle}
+    newMessagePlaceholder={newMessagePlaceholder}
     primaryColor={primaryColor}
     greeting={greeting}
     customer={customer}

@@ -12,13 +12,13 @@
     "node": ">=10"
   },
   "scripts": {
-    "sync:components": "cp -R ../chat-widget/src/components/* src/components",
-    "sync:api": "cp ../chat-widget/src/api.ts src/api.ts",
-    "sync:config": "cp ../chat-widget/src/config.ts src/config.ts",
-    "sync:theme": "cp ../chat-widget/src/theme.ts src/theme.ts",
-    "sync:utils": "cp ../chat-widget/src/utils.ts src/utils.ts",
+    "sync:components": "cp -R ../widget/src/components/* src/components",
+    "sync:api": "cp ../widget/src/api.ts src/api.ts",
+    "sync:config": "cp ../widget/src/config.ts src/config.ts",
+    "sync:theme": "cp ../widget/src/theme.ts src/theme.ts",
+    "sync:utils": "cp ../widget/src/utils.ts src/utils.ts",
     "sync": "npm run sync:components && npm run sync:api && npm run sync:config && npm run sync:theme && npm run sync:utils",
-    "deploy": "cp dist/index.js ../opus/assets/public/widget.js",
+    "deploy": "cp dist/index.js ../opus/assets/public/widget-v2.js",
     "build": "parcel build src/index.tsx --out-file dist/index.js --no-source-maps",
     "start": "parcel watch src/index.tsx --out-file dist/index.js"
   },
@@ -47,6 +47,7 @@
     "dayjs": "^1.8.29",
     "framer-motion": "^2.0.1",
     "phoenix": "^1.5.3",
+    "query-string": "^6.13.1",
     "react": "^16.0.0",
     "superagent": "^5.3.1",
     "theme-ui": "^0.3.1",
