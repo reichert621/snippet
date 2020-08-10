@@ -3,9 +3,9 @@ import {DEFAULT_BASE_URL} from './config';
 import {now} from './utils';
 
 export type CustomerMetadata = {
-  name: string;
-  email: string;
-  external_id: string;
+  name?: string;
+  email?: string;
+  external_id?: string;
   // TODO: include browser info
 };
 
