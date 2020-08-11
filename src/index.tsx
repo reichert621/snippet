@@ -13,6 +13,8 @@ const {
   greeting,
   customer,
   baseUrl,
+  requireEmailUpfront = false,
+  defaultIsOpen = false,
 } = config;
 
 if (!accountId) {
@@ -35,6 +37,8 @@ ReactDOM.render(
     greeting={greeting}
     customer={customer}
     baseUrl={baseUrl}
+    requireEmailUpfront={requireEmailUpfront}
+    defaultIsOpen={defaultIsOpen}
   />,
   document.getElementById('PapercupsChatWidget')
 );
