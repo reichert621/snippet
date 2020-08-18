@@ -13,6 +13,7 @@ const {
   greeting,
   customer,
   baseUrl,
+  iframeUrlOverride,
   requireEmailUpfront = false,
   defaultIsOpen = false,
 } = config;
@@ -37,6 +38,7 @@ ReactDOM.render(
     greeting={greeting}
     customer={customer}
     baseUrl={baseUrl}
+    iframeUrlOverride={iframeUrlOverride}
     requireEmailUpfront={requireEmailUpfront}
     defaultIsOpen={defaultIsOpen}
   />,
