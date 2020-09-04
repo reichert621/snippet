@@ -1,10 +1,8 @@
 /** @jsx jsx */
 
 import React from 'react';
-import {motion} from 'framer-motion';
 import {ThemeProvider, jsx} from 'theme-ui';
 import qs from 'query-string';
-import WidgetToggle from './WidgetToggle';
 import {
   CustomerMetadata,
   WidgetSettings,
@@ -16,8 +14,7 @@ import getThemeConfig from '../theme';
 import store from '../storage';
 import {getUserInfo} from '../track/info';
 
-// const DEFAULT_IFRAME_URL = 'http://localhost:8080';
-const DEFAULT_IFRAME_URL = 'https://chat-window.vercel.app';
+const DEFAULT_IFRAME_URL = 'https://chat-widget.papercups.io';
 
 // TODO: set this up somewhere else
 const setup = (w: any, handlers: (msg?: any) => void) => {
@@ -48,15 +45,20 @@ type Props = {
   iframeUrlOverride?: string;
   requireEmailUpfront?: boolean;
   defaultIsOpen?: boolean;
+  customIconUrl?: string;
+  children: (data: any) => any;
 };
 
 type State = {
   isOpen: boolean;
+  isLoaded: boolean;
   query: string;
   config: WidgetConfig;
+  shouldDisplayNotifications: boolean;
+  isTransitioning: boolean;
 };
 
-class EmbeddableWidget extends React.Component<Props, State> {
+class ChatWidgetContainer extends React.Component<Props, State> {
   iframeRef: any;
   storage: any;
   unsubscribe: any;
@@ -64,7 +66,14 @@ class EmbeddableWidget extends React.Component<Props, State> {
   constructor(props: Props) {
     super(props);
 
-    this.state = {isOpen: false, query: '', config: {} as WidgetConfig};
+    this.state = {
+      isOpen: false,
+      isLoaded: false,
+      query: '',
+      config: {} as WidgetConfig,
+      shouldDisplayNotifications: false,
+      isTransitioning: false,
+    };
   }
 
   async componentDidMount() {
@@ -159,6 +168,10 @@ class EmbeddableWidget extends React.Component<Props, State> {
     }
   }
 
+  setIframeRef = (el: HTMLIFrameElement) => {
+    this.iframeRef = el;
+  };
+
   getIframeUrl = () => {
     return this.props.iframeUrlOverride || DEFAULT_IFRAME_URL;
   };
@@ -214,6 +227,12 @@ class EmbeddableWidget extends React.Component<Props, State> {
         return this.handleCacheCustomerId(payload);
       case 'conversation:join':
         return this.sendCustomerUpdate(payload);
+      case 'messages:unseen':
+        return this.handleUnseenMessages(payload);
+      case 'messages:seen':
+        return this.handleMessagesSeen();
+      case 'papercups:open':
+        return this.handleToggleOpen();
       default:
         return null;
     }
@@ -223,10 +242,26 @@ class EmbeddableWidget extends React.Component<Props, State> {
     console.debug('Sending from parent:', {event, payload});
     const el = this.iframeRef as any;
 
-    el.contentWindow.postMessage({event, payload}, '*');
+    el.contentWindow.postMessage({event, payload}, this.getIframeUrl());
+  };
+
+  handleUnseenMessages = (payload: any) => {
+    console.debug('Handling unseen messages:', payload);
+
+    this.setState({shouldDisplayNotifications: true});
+    this.send('notifications:display', {shouldDisplayNotifications: true});
+  };
+
+  handleMessagesSeen = () => {
+    console.debug('Handling messages seen');
+
+    this.setState({shouldDisplayNotifications: false});
+    this.send('notifications:display', {shouldDisplayNotifications: false});
   };
 
   handleChatLoaded = () => {
+    this.setState({isLoaded: true});
+
     if (this.props.defaultIsOpen) {
       this.setState({isOpen: true}, () =>
         this.send('papercups:toggle', {isOpen: true})
@@ -264,13 +299,37 @@ class EmbeddableWidget extends React.Component<Props, State> {
   };
 
   handleToggleOpen = () => {
-    const isOpen = !this.state.isOpen;
+    const {isOpen: wasOpen, isLoaded, shouldDisplayNotifications} = this.state;
+    const isOpen = !wasOpen;
 
-    this.setState({isOpen}, () => this.send('papercups:toggle', {isOpen}));
+    // Prevent opening the widget until everything has loaded
+    if (!isLoaded) {
+      return;
+    }
+
+    if (!wasOpen && shouldDisplayNotifications) {
+      this.setState({isTransitioning: true}, () => {
+        setTimeout(() => {
+          this.setState({isOpen, isTransitioning: false}, () =>
+            this.send('papercups:toggle', {isOpen})
+          );
+        }, 200);
+      });
+    } else {
+      this.setState({isOpen}, () => this.send('papercups:toggle', {isOpen}));
+    }
   };
 
   render() {
-    const {isOpen, query, config} = this.state;
+    const {
+      isOpen,
+      isLoaded,
+      query,
+      config,
+      shouldDisplayNotifications,
+      isTransitioning,
+    } = this.state;
+    const {customIconUrl, children} = this.props;
     const {primaryColor} = config;
 
     if (!query) {
@@ -278,6 +337,7 @@ class EmbeddableWidget extends React.Component<Props, State> {
     }
 
     const iframeUrl = this.getIframeUrl();
+    const isActive = (isOpen || shouldDisplayNotifications) && !isTransitioning;
     const theme = getThemeConfig({primary: primaryColor});
     const sandbox = [
       // Allow scripts to load in iframe
@@ -292,41 +352,22 @@ class EmbeddableWidget extends React.Component<Props, State> {
 
     return (
       <ThemeProvider theme={theme}>
-        {/* TODO: handle loading state better */}
-        <motion.iframe
-          ref={(el) => (this.iframeRef = el)}
-          className='Papercups-chatWindowContainer'
-          sandbox={sandbox}
-          animate={isOpen ? 'open' : 'closed'}
-          variants={{
-            closed: {opacity: 0, y: 4},
-            open: {opacity: 1, y: 0},
-          }}
-          transition={{duration: 0.2, ease: 'easeIn'}}
-          src={`${iframeUrl}?${query}`}
-          style={isOpen ? {} : {pointerEvents: 'none', minHeight: 0, height: 0}}
-          sx={{
-            border: 'none',
-            bg: 'background',
-            variant: 'styles.WidgetContainer',
-          }}
-        >
-          Loading...
-        </motion.iframe>
-
-        <motion.div
-          className='Papercups-toggleButtonContainer'
-          initial={false}
-          animate={isOpen ? 'open' : 'closed'}
-          sx={{
-            variant: 'styles.WidgetToggleContainer',
-          }}
-        >
-          <WidgetToggle toggle={this.handleToggleOpen} />
-        </motion.div>
+        {children({
+          sandbox,
+          isLoaded,
+          isActive,
+          isOpen,
+          isTransitioning,
+          customIconUrl,
+          iframeUrl,
+          query,
+          shouldDisplayNotifications,
+          setIframeRef: this.setIframeRef,
+          onToggleOpen: this.handleToggleOpen,
+        })}
       </ThemeProvider>
     );
   }
 }
 
-export default EmbeddableWidget;
+export default ChatWidgetContainer;

@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import ChatWidget from './components/EmbeddableWidget';
+import ChatWidget from './components/ChatWidget';
 
 const w = window as any;
 const config = (w.Papercups && w.Papercups.config) || {};
@@ -14,6 +14,7 @@ const {
   customer,
   baseUrl,
   iframeUrlOverride,
+  customIconUrl,
   requireEmailUpfront = false,
   defaultIsOpen = false,
 } = config;
@@ -39,6 +40,7 @@ ReactDOM.render(
     customer={customer}
     baseUrl={baseUrl}
     iframeUrlOverride={iframeUrlOverride}
+    customIconUrl={customIconUrl}
     requireEmailUpfront={requireEmailUpfront}
     defaultIsOpen={defaultIsOpen}
   />,
