@@ -16,13 +16,16 @@ type Props = {
   greeting?: string;
   customer?: CustomerMetadata | null;
   newMessagePlaceholder?: string;
+  agentAvailableText?: string;
+  agentUnavailableText?: string;
+  showAgentAvailability?: boolean;
   iframeUrlOverride?: string;
   requireEmailUpfront?: boolean;
   defaultIsOpen?: boolean;
   customIconUrl?: string;
 };
 
-const ChatWidgetV2 = (props: Props) => {
+const ChatWidget = (props: Props) => {
   return (
     <ChatWidgetContainer {...props}>
       {(config) => {
@@ -93,4 +96,4 @@ const ChatWidgetV2 = (props: Props) => {
   );
 };
 
-export default ChatWidgetV2;
+export default ChatWidget;
