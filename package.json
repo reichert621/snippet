@@ -21,7 +21,7 @@
     "sync:utils": "cp ../widget/src/utils.ts src/utils.ts",
     "sync": "npm run sync:components && npm run sync:track && npm run sync:storage && npm run sync:api && npm run sync:config && npm run sync:theme && npm run sync:utils",
     "deploy": "cp dist/index.js ../opus/assets/public/widget-rc.js",
-    "build": "parcel build src/index.tsx --out-file dist/index.js --no-source-maps --experimental-scope-hoisting",
+    "build": "NODE_ENV=production parcel build src/index.tsx --out-file dist/index.js --no-source-maps --experimental-scope-hoisting",
     "start": "parcel watch src/index.tsx --out-file dist/index.js"
   },
   "peerDependencies": {

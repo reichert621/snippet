@@ -15,6 +15,9 @@ const {
   baseUrl,
   iframeUrlOverride,
   customIconUrl,
+  agentAvailableText,
+  agentUnavailableText,
+  showAgentAvailability,
   requireEmailUpfront = false,
   defaultIsOpen = false,
 } = config;
@@ -41,6 +44,9 @@ ReactDOM.render(
     baseUrl={baseUrl}
     iframeUrlOverride={iframeUrlOverride}
     customIconUrl={customIconUrl}
+    agentAvailableText={agentAvailableText}
+    agentUnavailableText={agentUnavailableText}
+    showAgentAvailability={showAgentAvailability}
     requireEmailUpfront={requireEmailUpfront}
     defaultIsOpen={defaultIsOpen}
   />,
