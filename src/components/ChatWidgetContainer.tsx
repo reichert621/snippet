@@ -5,13 +5,16 @@ import {ThemeProvider, jsx} from 'theme-ui';
 import qs from 'query-string';
 import {
   CustomerMetadata,
+  Message,
   WidgetSettings,
   fetchWidgetSettings,
   updateWidgetSettingsMetadata,
 } from '../api';
-import {WidgetConfig} from '../utils';
+import {WidgetConfig, noop} from '../utils';
 import getThemeConfig from '../theme';
 import store from '../storage';
+import {isDev} from '../config';
+import Logger from '../logger';
 import {getUserInfo} from '../track/info';
 
 const DEFAULT_IFRAME_URL = 'https://chat-widget.papercups.io';
@@ -33,6 +36,7 @@ const setup = (w: any, handlers: (msg?: any) => void) => {
   }
 };
 
+// TODO: DRY up props with ChatWidget component
 type Props = {
   title?: string;
   subtitle?: string;
@@ -49,6 +53,10 @@ type Props = {
   requireEmailUpfront?: boolean;
   defaultIsOpen?: boolean;
   customIconUrl?: string;
+  onChatOpened?: () => void;
+  onChatClosed?: () => void;
+  onMessageSent?: (message: Message) => void;
+  onMessageReceived?: (message: Message) => void;
   children: (data: any) => any;
 };
 
@@ -65,6 +73,7 @@ class ChatWidgetContainer extends React.Component<Props, State> {
   iframeRef: any;
   storage: any;
   unsubscribe: any;
+  logger: Logger;
 
   constructor(props: Props) {
     super(props);
@@ -95,7 +104,10 @@ class ChatWidgetContainer extends React.Component<Props, State> {
       requireEmailUpfront,
       customer = {},
     } = this.props;
+    // TODO: make it possible to opt into debug mode via props
+    const debugModeEnabled = isDev(window);
 
+    this.logger = new Logger(debugModeEnabled);
     this.unsubscribe = setup(window, this.handlers);
     this.storage = store(window);
 
@@ -111,6 +123,7 @@ class ChatWidgetContainer extends React.Component<Props, State> {
       greeting: greeting || settings.greeting,
       newMessagePlaceholder:
         newMessagePlaceholder || settings.new_message_placeholder,
+      companyName: settings?.account?.company_name,
       requireEmailUpfront: requireEmailUpfront ? 1 : 0,
       showAgentAvailability: showAgentAvailability ? 1 : 0,
       customerId: this.storage.getCustomerId(),
@@ -212,13 +225,13 @@ class ChatWidgetContainer extends React.Component<Props, State> {
     return updateWidgetSettingsMetadata(accountId, metadata, baseUrl).catch(
       (err) => {
         // No need to block on this
-        console.error('Failed to update widget metadata:', err);
+        this.logger.error('Failed to update widget metadata:', err);
       }
     );
   };
 
   handlers = (msg: any) => {
-    console.debug('Handling in parent:', msg.data);
+    this.logger.debug('Handling in parent:', msg.data);
     const iframeUrl = this.getIframeUrl();
     const {origin} = new URL(iframeUrl);
 
@@ -236,6 +249,10 @@ class ChatWidgetContainer extends React.Component<Props, State> {
         return this.handleCacheCustomerId(payload);
       case 'conversation:join':
         return this.sendCustomerUpdate(payload);
+      case 'message:received':
+        return this.handleMessageReceived(payload);
+      case 'message:sent':
+        return this.handleMessageSent(payload);
       case 'messages:unseen':
         return this.handleUnseenMessages(payload);
       case 'messages:seen':
@@ -248,21 +265,47 @@ class ChatWidgetContainer extends React.Component<Props, State> {
   };
 
   send = (event: string, payload?: any) => {
-    console.debug('Sending from parent:', {event, payload});
+    this.logger.debug('Sending from parent:', {event, payload});
     const el = this.iframeRef as any;
+
+    if (!el) {
+      throw new Error(
+        `Attempted to send event ${event} with payload ${JSON.stringify(
+          payload
+        )} before iframeRef was ready`
+      );
+    }
 
     el.contentWindow.postMessage({event, payload}, this.getIframeUrl());
   };
 
+  handleMessageReceived = (message: Message) => {
+    const {onMessageReceived = noop} = this.props;
+    const {user_id: userId, customer_id: customerId} = message;
+    const isFromAgent = !!userId && !customerId;
+
+    // Only invoke callback if message is from agent, because we currently track
+    // `message:received` events to know if a message went through successfully
+    if (isFromAgent) {
+      onMessageReceived && onMessageReceived(message);
+    }
+  };
+
+  handleMessageSent = (message: Message) => {
+    const {onMessageSent = noop} = this.props;
+
+    onMessageSent && onMessageSent(message);
+  };
+
   handleUnseenMessages = (payload: any) => {
-    console.debug('Handling unseen messages:', payload);
+    this.logger.debug('Handling unseen messages:', payload);
 
     this.setState({shouldDisplayNotifications: true});
     this.send('notifications:display', {shouldDisplayNotifications: true});
   };
 
   handleMessagesSeen = () => {
-    console.debug('Handling messages seen');
+    this.logger.debug('Handling messages seen');
 
     this.setState({shouldDisplayNotifications: false});
     this.send('notifications:display', {shouldDisplayNotifications: false});
@@ -272,9 +315,7 @@ class ChatWidgetContainer extends React.Component<Props, State> {
     this.setState({isLoaded: true});
 
     if (this.props.defaultIsOpen) {
-      this.setState({isOpen: true}, () =>
-        this.send('papercups:toggle', {isOpen: true})
-      );
+      this.setState({isOpen: true}, () => this.emitToggleEvent(true));
     }
 
     return this.send('papercups:ping'); // Just testing
@@ -311,6 +352,18 @@ class ChatWidgetContainer extends React.Component<Props, State> {
     return this.storage.setCustomerId(customerId);
   };
 
+  emitToggleEvent = (isOpen: boolean) => {
+    this.send('papercups:toggle', {isOpen});
+
+    const {onChatOpened = noop, onChatClosed = noop} = this.props;
+
+    if (isOpen) {
+      onChatOpened && onChatOpened();
+    } else {
+      onChatClosed && onChatClosed();
+    }
+  };
+
   handleToggleOpen = () => {
     const {isOpen: wasOpen, isLoaded, shouldDisplayNotifications} = this.state;
     const isOpen = !wasOpen;
@@ -324,12 +377,12 @@ class ChatWidgetContainer extends React.Component<Props, State> {
       this.setState({isTransitioning: true}, () => {
         setTimeout(() => {
           this.setState({isOpen, isTransitioning: false}, () =>
-            this.send('papercups:toggle', {isOpen})
+            this.emitToggleEvent(isOpen)
           );
         }, 200);
       });
     } else {
-      this.setState({isOpen}, () => this.send('papercups:toggle', {isOpen}));
+      this.setState({isOpen}, () => this.emitToggleEvent(isOpen));
     }
   };
 

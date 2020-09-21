@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import ChatWidget from './components/ChatWidget';
 
+const noop = () => {};
 const w = window as any;
 const config = (w.Papercups && w.Papercups.config) || {};
 const {
@@ -20,6 +21,10 @@ const {
   showAgentAvailability,
   requireEmailUpfront = false,
   defaultIsOpen = false,
+  onChatOpened = noop,
+  onChatClosed = noop,
+  onMessageSent = noop,
+  onMessageReceived = noop,
 } = config;
 
 if (!accountId) {
@@ -49,6 +54,10 @@ ReactDOM.render(
     showAgentAvailability={showAgentAvailability}
     requireEmailUpfront={requireEmailUpfront}
     defaultIsOpen={defaultIsOpen}
+    onChatOpened={onChatOpened}
+    onChatClosed={onChatClosed}
+    onMessageSent={onMessageSent}
+    onMessageReceived={onMessageReceived}
   />,
   document.getElementById('PapercupsChatWidget')
 );
