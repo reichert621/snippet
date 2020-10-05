@@ -21,6 +21,7 @@ const {
   showAgentAvailability,
   requireEmailUpfront = false,
   defaultIsOpen = false,
+  onChatLoaded = noop,
   onChatOpened = noop,
   onChatClosed = noop,
   onMessageSent = noop,
@@ -54,6 +55,7 @@ ReactDOM.render(
     showAgentAvailability={showAgentAvailability}
     requireEmailUpfront={requireEmailUpfront}
     defaultIsOpen={defaultIsOpen}
+    onChatLoaded={onChatLoaded}
     onChatOpened={onChatOpened}
     onChatClosed={onChatClosed}
     onMessageSent={onMessageSent}
