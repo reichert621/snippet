@@ -10,6 +10,7 @@ const {
   title,
   subtitle,
   newMessagePlaceholder,
+  emailInputPlaceholder,
   primaryColor,
   greeting,
   customer,
@@ -46,6 +47,7 @@ ReactDOM.render(
     title={title}
     subtitle={subtitle}
     newMessagePlaceholder={newMessagePlaceholder}
+    emailInputPlaceholder={emailInputPlaceholder}
     primaryColor={primaryColor}
     greeting={greeting}
     customer={customer}
