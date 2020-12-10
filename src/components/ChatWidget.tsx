@@ -37,11 +37,11 @@ const ChatWidget = (props: Props) => {
             <React.Fragment>
               <motion.iframe
                 ref={setIframeRef}
-                title='Papercups Chat Widget Container'
-                className='Papercups-chatWindowContainer'
+                title="Papercups Chat Widget Container"
+                className="Papercups-chatWindowContainer"
                 sandbox={sandbox}
                 animate={isActive ? 'open' : 'closed'}
-                initial='closed'
+                initial="closed"
                 variants={{
                   closed: {opacity: 0, y: 4},
                   open: {opacity: 1, y: 0},
@@ -67,7 +67,7 @@ const ChatWidget = (props: Props) => {
 
               {isLoaded && !hideToggleButton && (
                 <motion.div
-                  className='Papercups-toggleButtonContainer'
+                  className="Papercups-toggleButtonContainer"
                   initial={false}
                   animate={isOpen ? 'open' : 'closed'}
                   sx={{

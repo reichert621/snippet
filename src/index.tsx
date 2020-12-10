@@ -19,6 +19,8 @@ const {
   agentAvailableText,
   agentUnavailableText,
   showAgentAvailability,
+  iconVariant = 'outlined',
+  hideToggleButton = false,
   requireEmailUpfront = false,
   defaultIsOpen = false,
   onChatLoaded = noop,
@@ -55,6 +57,8 @@ ReactDOM.render(
     showAgentAvailability={showAgentAvailability}
     requireEmailUpfront={requireEmailUpfront}
     defaultIsOpen={defaultIsOpen}
+    iconVariant={iconVariant}
+    hideToggleButton={hideToggleButton}
     onChatLoaded={onChatLoaded}
     onChatOpened={onChatOpened}
     onChatClosed={onChatClosed}
