@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import ChatWidget from './components/ChatWidget';
 
+// TODO: there's probably a more elegant way to do this...
+
 const noop = () => {};
 const w = window as any;
 const config = (w.Papercups && w.Papercups.config) || {};
