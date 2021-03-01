@@ -27,6 +27,7 @@ const {
   hideToggleButton = false,
   requireEmailUpfront = false,
   defaultIsOpen = false,
+  styles = {},
   onChatLoaded = noop,
   onChatOpened = noop,
   onChatClosed = noop,
@@ -65,6 +66,7 @@ ReactDOM.render(
     defaultIsOpen={defaultIsOpen}
     iconVariant={iconVariant}
     hideToggleButton={hideToggleButton}
+    styles={styles}
     onChatLoaded={onChatLoaded}
     onChatOpened={onChatOpened}
     onChatClosed={onChatClosed}
