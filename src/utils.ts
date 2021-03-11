@@ -5,6 +5,7 @@ export type WidgetConfig = {
   subtitle?: string;
   primaryColor?: string;
   greeting?: string;
+  awayMessage?: string;
   newMessagePlaceholder?: string;
   emailInputPlaceholder?: string;
   newMessagesNotificationText?: string;
@@ -16,6 +17,7 @@ export type WidgetConfig = {
   closeable?: 1 | 0;
   customerId?: string;
   subscriptionPlan?: string;
+  isBrandingHidden?: boolean;
   metadata?: string; // stringified JSON
   version?: string;
 };
