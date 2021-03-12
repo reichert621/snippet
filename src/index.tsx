@@ -16,6 +16,7 @@ const {
   newMessagesNotificationText,
   primaryColor,
   greeting,
+  awayMessage,
   customer,
   baseUrl,
   iframeUrlOverride,
@@ -27,6 +28,9 @@ const {
   hideToggleButton = false,
   requireEmailUpfront = false,
   defaultIsOpen = false,
+  isOpenByDefault = false,
+  persistOpenState = false,
+  position = 'right',
   styles = {},
   onChatLoaded = noop,
   onChatOpened = noop,
@@ -55,6 +59,7 @@ ReactDOM.render(
     newMessagesNotificationText={newMessagesNotificationText}
     primaryColor={primaryColor}
     greeting={greeting}
+    awayMessage={awayMessage}
     customer={customer}
     baseUrl={baseUrl}
     iframeUrlOverride={iframeUrlOverride}
@@ -64,9 +69,12 @@ ReactDOM.render(
     showAgentAvailability={showAgentAvailability}
     requireEmailUpfront={requireEmailUpfront}
     defaultIsOpen={defaultIsOpen}
+    isOpenByDefault={isOpenByDefault}
+    persistOpenState={persistOpenState}
     iconVariant={iconVariant}
     hideToggleButton={hideToggleButton}
     styles={styles}
+    position={position}
     onChatLoaded={onChatLoaded}
     onChatOpened={onChatOpened}
     onChatClosed={onChatClosed}
