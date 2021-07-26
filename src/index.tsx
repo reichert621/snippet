@@ -30,6 +30,10 @@ const {
   defaultIsOpen = false,
   isOpenByDefault = false,
   persistOpenState = false,
+  hideOutsideWorkingHours = false,
+  popUpInitialMessage = false,
+  disableAnalyticsTracking = false,
+  debug = false,
   position = 'right',
   styles = {},
   onChatLoaded = noop,
@@ -73,8 +77,12 @@ ReactDOM.render(
     persistOpenState={persistOpenState}
     iconVariant={iconVariant}
     hideToggleButton={hideToggleButton}
+    hideOutsideWorkingHours={hideOutsideWorkingHours}
+    popUpInitialMessage={popUpInitialMessage}
     styles={styles}
     position={position}
+    debug={debug}
+    disableAnalyticsTracking={disableAnalyticsTracking}
     onChatLoaded={onChatLoaded}
     onChatOpened={onChatOpened}
     onChatClosed={onChatClosed}
