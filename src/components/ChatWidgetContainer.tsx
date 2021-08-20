@@ -75,7 +75,15 @@ export type SharedProps = {
   customIconUrl?: string;
   disableAnalyticsTracking?: boolean;
   debug?: boolean;
-  onChatLoaded?: () => void;
+  onChatLoaded?: ({
+    open,
+    close,
+    identify,
+  }: {
+    open: () => void;
+    close: () => void;
+    identify: (data: any) => void;
+  }) => void;
   onChatOpened?: () => void;
   onChatClosed?: () => void;
   onMessageSent?: (message: Message) => void;
@@ -143,6 +151,7 @@ class ChatWidgetContainer extends React.Component<Props, State> {
   }
 
   async componentDidMount() {
+    const ts = +new Date();
     // TODO: use `subscription_plan` from settings.account to determine
     // whether to display the Papercups branding or not in the chat window
     const settings = await this.fetchWidgetSettings();
@@ -204,6 +213,7 @@ class ChatWidgetContainer extends React.Component<Props, State> {
       disableAnalyticsTracking: disableAnalyticsTracking ? 1 : 0,
       debug: debug ? 1 : 0,
       version: '1.1.11',
+      ts: ts.toString(),
     };
 
     const query = qs.stringify(config, {skipEmptyString: true, skipNull: true});
@@ -237,6 +247,7 @@ class ChatWidgetContainer extends React.Component<Props, State> {
       showAgentAvailability,
       agentAvailableText,
       agentUnavailableText,
+      customer,
     } = this.props;
     const current = [
       accountId,
@@ -268,14 +279,15 @@ class ChatWidgetContainer extends React.Component<Props, State> {
       prevProps.agentAvailableText,
       prevProps.agentUnavailableText,
     ];
-    const shouldUpdate = current.some((value, idx) => {
+    const {customerId} = this.state.config;
+    const shouldUpdateConfig = current.some((value, idx) => {
       return value !== prev[idx];
     });
 
     // Send updates to iframe if props change. (This is mainly for use in
     // the demo and "Getting Started" page, where users can play around with
     // customizing the chat widget to suit their needs)
-    if (shouldUpdate) {
+    if (shouldUpdateConfig) {
       this.handleConfigUpdated({
         accountId,
         title,
@@ -292,7 +304,29 @@ class ChatWidgetContainer extends React.Component<Props, State> {
         showAgentAvailability: showAgentAvailability ? 1 : 0,
       });
     }
+
+    if (customerId && this.shouldUpdateCustomer(customer, prevProps.customer)) {
+      this.updateCustomerMetadata(customerId, customer);
+    }
   }
+
+  shouldUpdateCustomer = (current: any, previous: any) => {
+    if (!current) {
+      return false;
+    } else if (current && !previous) {
+      return true;
+    }
+
+    const {metadata: x = {}, ...a} = current || {};
+    const {metadata: y = {}, ...b} = previous || {};
+
+    const hasMatchingInfo = Object.keys(a).every((key) => a[key] === b[key]);
+    const hasMatchingMetadata = Object.keys(x).every(
+      (key) => x[key] === y[key]
+    );
+
+    return !(hasMatchingInfo && hasMatchingMetadata);
+  };
 
   getDefaultTitle = async (settings: WidgetSettings) => {
     const {title, setDefaultTitle} = this.props;
@@ -378,6 +412,23 @@ class ChatWidgetContainer extends React.Component<Props, State> {
     );
   };
 
+  hasValidPayloadIdentity = (payload: any) => {
+    const ts = payload && payload.ts;
+    const {config = {} as WidgetConfig} = this.state;
+
+    if (!ts) {
+      // If the payload doesn't contain an identifier, let it pass through
+      return true;
+    }
+
+    if (config.ts === ts) {
+      // Pass through, since the payload identifier matches the component ts
+      return true;
+    }
+
+    return false;
+  };
+
   customEventHandlers = (event: any) => {
     if (!event || !event.type) {
       return null;
@@ -409,6 +460,14 @@ class ChatWidgetContainer extends React.Component<Props, State> {
     }
 
     const {event, payload = {}} = msg.data;
+
+    if (!this.hasValidPayloadIdentity(payload)) {
+      this.logger.warn(
+        'Payload identifer from iframe does not match parent — halting message handlers.'
+      );
+
+      return null;
+    }
 
     switch (event) {
       case 'chat:loaded':
@@ -511,7 +570,11 @@ class ChatWidgetContainer extends React.Component<Props, State> {
     const {popUpInitialMessage, onChatLoaded = noop} = this.props;
 
     if (onChatLoaded && typeof onChatLoaded === 'function') {
-      onChatLoaded();
+      onChatLoaded({
+        open: this.handleOpenWidget,
+        close: this.handleCloseWidget,
+        identify: this.identify,
+      });
     }
 
     if (this.shouldOpenByDefault()) {
@@ -535,9 +598,7 @@ class ChatWidgetContainer extends React.Component<Props, State> {
     this.send('papercups:plan', {plan: subscriptionPlan});
   };
 
-  formatCustomerMetadata = () => {
-    const {customer = {}} = this.props;
-
+  formatCustomerMetadata = (customer: CustomerMetadata | null | undefined) => {
     if (!customer) {
       return {};
     }
@@ -552,12 +613,34 @@ class ChatWidgetContainer extends React.Component<Props, State> {
     }, {});
   };
 
-  sendCustomerUpdate = (payload: any) => {
-    const {customerId} = payload;
+  identify = (data: CustomerMetadata) => {
+    const {customerId} = this.state.config;
+
+    if (!customerId) {
+      return null;
+    }
+
+    return this.updateCustomerMetadata(customerId, data);
+  };
+
+  updateCustomerMetadata = (
+    customerId: string,
+    data: CustomerMetadata | null | undefined
+  ) => {
     const customerBrowserInfo = getUserInfo(window);
-    const metadata = {...customerBrowserInfo, ...this.formatCustomerMetadata()};
+    const metadata = {
+      ...customerBrowserInfo,
+      ...this.formatCustomerMetadata(data),
+    };
 
     return this.send('customer:update', {customerId, metadata});
+  };
+
+  sendCustomerUpdate = (payload: any) => {
+    const {customerId} = payload;
+    const {customer} = this.props;
+
+    this.updateCustomerMetadata(customerId, customer);
   };
 
   handleCacheCustomerId = (payload: any) => {
