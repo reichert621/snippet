@@ -8,6 +8,8 @@ const noop = () => {};
 const w = window as any;
 const config = (w.Papercups && w.Papercups.config) || {};
 const {
+  token,
+  inbox,
   accountId,
   title,
   subtitle,
@@ -43,7 +45,9 @@ const {
   onMessageReceived = noop,
 } = config;
 
-if (!accountId) {
+const t = token || accountId;
+
+if (!t) {
   throw new Error(
     'An account token is required to render the Papercups chat widget!'
   );
@@ -55,6 +59,8 @@ document.body.appendChild(el);
 
 ReactDOM.render(
   <ChatWidget
+    token={token}
+    inbox={inbox}
     accountId={accountId}
     title={title}
     subtitle={subtitle}
